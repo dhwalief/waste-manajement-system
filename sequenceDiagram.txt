@@ -1,0 +1,39 @@
+@startuml
+actor User
+participant "User Class" as UserClass
+participant "Admin Class" as AdminClass
+participant "Collector Class" as CollectorClass
+participant "Recycler Class" as RecyclerClass
+participant "JSON File" as JsonFile
+
+User -> UserClass : login()
+UserClass -> JsonFile : readUserData()
+JsonFile -> UserClass : returnUserData()
+
+User -> UserClass : selectRole()
+UserClass -> AdminClass : manageUser()
+AdminClass -> JsonFile : readAdminData()
+JsonFile -> AdminClass : returnAdminData()
+AdminClass -> JsonFile : updateUserData()
+JsonFile -> AdminClass : confirmUpdate()
+
+User -> CollectorClass : addRequest()
+CollectorClass -> JsonFile : readCollectorData()
+JsonFile -> CollectorClass : returnCollectorData()
+CollectorClass -> JsonFile : addCollectionRequest()
+JsonFile -> CollectorClass : confirmAddRequest()
+
+User -> RecyclerClass : addRequest()
+RecyclerClass -> JsonFile : readRecyclerData()
+JsonFile -> RecyclerClass : returnRecyclerData()
+RecyclerClass -> JsonFile : addRecyclingRequest()
+JsonFile -> RecyclerClass : confirmAddRequest()
+
+User -> AdminClass : generateMonthlyReport()
+AdminClass -> JsonFile : readReportData()
+JsonFile -> AdminClass : returnReportData()
+
+User -> JsonFile : sendNotification()
+JsonFile -> User : confirmNotification()
+
+@enduml

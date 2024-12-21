@@ -1,0 +1,103 @@
+@startuml
+class User {
+    - id : string
+    - nama : string
+    - email : string
+    - password : string
+    - role : string (enum: admin, collector, recycler)
+    + register() : void
+    + login() : boolean
+    + logout()
+    + updateProfil() : void
+    + deleteUser() : void
+}
+
+class Admin {
+    + manageUser() : void
+    + viewAllUser() : void
+}
+
+class Collector {
+    + addRequest() : void
+    + viewRequest() : void
+}
+
+class Recycler {
+    + addRequest() : void
+    + viewRequest() : void
+}
+
+class WasteItems {
+    - id : int
+    - type[] : string
+    - weight : float
+    - pricePerKg : float
+    + calculatePrice() : float
+}
+
+class OrganicWaste {
+    - decompositionTime : datetime
+    + isCompostable() : bool
+}
+
+class PlasticWaste {
+    - recyclabilityGrade : string
+    + calculateRecyclingCost() : float
+}
+
+class MetalWaste {
+    - metalType : string
+    + isValuable() : boolean
+}
+
+class CollectionRequest {
+    - id : int
+    - userId : int
+    - pickUpDate : datetime
+    - status : string (enum: Pending, InProgress, Complete)
+    + addRequest() : void
+    + updateRequest() : void
+}
+
+class Transactions {
+    - id : int
+    - userId : int
+    - totalAmount : float
+    - date : datetime
+    + generateReceipt() : string
+    + viewHistory() : array
+}
+
+class Report {
+    - id : int
+    - userId : int
+    - month : string
+    - totalCollected : float
+    + generateMonthlyReport() : void
+    + viewReport() : void
+}
+
+class Notification {
+    - id : int
+    - userId : int
+    - message : string
+    - createdAt : datetime
+    + sendNotification() : void
+}
+
+User <|-- Admin
+User <|-- Collector
+User <|-- Recycler
+
+WasteItems <|-- OrganicWaste
+WasteItems <|-- MetalWaste
+WasteItems <|-- PlasticWaste
+
+User "1" --> "many" CollectionRequest : membuat
+User "1" --> "many" Transactions : memiliki
+User "1" --> "1" Report : memiliki
+User "1" --> "many" Notification : menerima
+
+CollectionRequest "1" --> "many" WasteItems : dapat memiliki
+Report "1" --> "many" Transactions : mencakup
+@enduml

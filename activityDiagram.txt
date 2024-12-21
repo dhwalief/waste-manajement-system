@@ -1,0 +1,45 @@
+@startuml
+|User|
+start
+:register();
+:login();
+:selectRole();
+
+|Admin|
+if (is Admin?) then (yes)
+  :manageUser();
+  :manageRequests();
+else
+  |Collector|
+  if (is Collector?) then (yes)
+    :addCollectionRequest();
+    :selectWasteItems();
+    :confirmRequest();
+  else
+    |Recycler|
+    if (is Recycler?) then (yes)
+      :addRecyclingRequest();
+      :processRecycling();
+    endif
+  endif
+endif
+
+|Admin|
+:generateMonthlyReport();
+
+|Collector|
+:completeRequest();
+
+|Recycler|
+:completeRecycling();
+:generateTransaction();
+
+|User|
+:generateReceipt();
+:sendNotification();
+:viewReport();
+
+|User|
+:logout();
+stop
+@enduml
