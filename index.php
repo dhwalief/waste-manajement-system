@@ -196,10 +196,27 @@ class Admin extends User {
 
     public function viewAllUsers() {
         if (file_exists($this->filePath)) {
-            return json_decode(file_get_contents($this->filePath), true);
+            $data = json_decode(file_get_contents($this->filePath), true);
+    
+            // Pastikan data adalah array
+            if (is_array($data)) {
+                $output = "";
+                $userIndex = 1;
+                foreach ($data as $key => $user) {
+                    $output .= "User {$userIndex}:\n";
+                    foreach ($user as $field => $value) {
+                        $output .= ucfirst($field) . " : " . $value . "\n";
+                    }
+                    $output .= "\n";
+                    $userIndex++;
+                }
+                return $output;
+            }
+            return "Invalid data format in file.";
         }
-        return [];
+        return "File not found.";
     }
+    
 
     public function deleteUser($id) {
         if (file_exists($this->filePath)) {
@@ -207,9 +224,9 @@ class Admin extends User {
             if (isset($users[$id])) {
                 unset($users[$id]);
                 file_put_contents($this->filePath, json_encode($users));
-                echo "Pengguna berhasil dihapus.\n";
+                echo "Pengguna id {$users[$id]} berhasil dihapus.\n";
             } else {
-                echo "Pengguna tidak ditemukan.\n";
+                echo "Pengguna id {$users[$id]} tidak ditemukan.\n";
 
             }
         }
@@ -217,12 +234,38 @@ class Admin extends User {
 
     public function manageRequest($requestId, $status) {
         $request = new CollectionRequest($requestId, null, null, null);
+        $request->getRequest($requestId);
         if ($request->updateRequest($status)) {
             echo "Request berhasil diperbarui.\n";
         } else {
             echo "Gagal memperbarui request.\n";
         }
     }
+
+    public function viewAllRequests() {
+        $filePath = "collection_requests.json";
+        if (file_exists($filePath)) {
+            $data = json_decode(file_get_contents($filePath), true);
+    
+            // Pastikan data adalah array
+            if (is_array($data)) {
+                $output = "";
+                $id = 1;
+                foreach ($data as $key => $user) {
+                    $output .= "ID Permintaan {$id}:\n";
+                    foreach ($user as $field => $value) {
+                        $output .= ucfirst($field) . " : " . $value . "\n";
+                    }
+                    $output .= "\n";
+                    $id++;
+                }
+                return $output;
+            }
+            return "Invalid data format in file.";
+        }
+        return "File not found.";
+    }
+    
 
     public function generateMonthlyReport($userId, $month) {
         $reportId = generateId();
@@ -231,25 +274,104 @@ class Admin extends User {
         echo "Laporan bulanan berhasil dibuat.\n";
     }
 
-    public function viewPendingRequests() {
-        $requests = [];
-        if (file_exists('collection_requests.json')) {
-            $requests = json_decode(file_get_contents('collection_requests.json'), true);
-        }
-
-        $pendingRequests = [];
-        foreach ($requests as $request) {
-            if ($request['status'] !== 'reported') {
-                $pendingRequests[] = $request;
+    public function manageWasteItems() {
+        while (true) {
+            echo "1. Tambah item sampah\n";
+            echo "2. Lihat semua item sampah\n";
+            echo "3. Ubah item sampah\n";
+            echo "4. Hapus item sampah\n";
+            echo "5. Kembali\n";
+            echo "Pilih opsi: ";
+            $option = trim(fgets(STDIN));
+            
+            switch ($option) {
+                case 1:
+                    $id = getInput("ID: ");
+                    $type = getInput("Tipe (organic/plastic/metal): ");
+                    $weight = getInput("Berat: ");
+                    $pricePerKg = getInput("Harga per Kg: ");
+                    if ($type == 'organic') {
+                        $decompositionTime = getInput("Waktu dekomposisi: ");
+                        $item = new OrganicWaste($id, $type, $weight, $pricePerKg, $decompositionTime);
+                    } elseif ($type == 'plastic') {
+                        $recyclabilityGrade = getInput("Grade daur ulang: ");
+                        $item = new PlasticWaste($id, $type, $weight, $pricePerKg, $recyclabilityGrade);
+                    } elseif ($type == 'metal') {
+                        $metalType = getInput("Tipe logam: ");
+                        $item = new MetalWaste($id, $type, $weight, $pricePerKg, $metalType);
+                    } else {
+                        echo "Tipe tidak valid.\n";
+                        break;
+                    }
+                    if ($item->save()) {
+                        echo "Item sampah berhasil ditambahkan.\n";
+                    } else {
+                        echo "Gagal menambahkan item sampah.\n";
+                    }
+                    break;
+                case 2:
+                    $items = json_decode(file_get_contents('waste_items.json'), true);
+                    foreach ($items as $item) {
+                        echo "ID: {$item['id']}\n";
+                        echo "Tipe: {$item['type']}\n";
+                        echo "Berat: {$item['weight']}\n";
+                        echo "Harga per Kg: {$item['pricePerKg']}\n";
+                        if ($item['type'] == 'organic') {
+                            echo "Waktu dekomposisi: {$item['decompositionTime']}\n";
+                        } elseif ($item['type'] == 'plastic') {
+                            echo "Grade daur ulang: {$item['recyclabilityGrade']}\n";
+                        } elseif ($item['type'] == 'metal') {
+                            echo "Tipe logam: {$item['metalType']}\n";
+                        }
+                        echo "=====================\n";
+                    }
+                    break;
+                case 3:
+                    $id = getInput("ID: ");
+                    $type = getInput("Tipe (organic/plastic/metal): ");
+                    $weight = getInput("Berat: ");
+                    $pricePerKg = getInput("Harga per Kg: ");
+                    if ($type == 'organic') {
+                        $decompositionTime = getInput("Waktu dekomposisi: ");
+                        $success = OrganicWaste::updateItem($id, $type, $weight, $pricePerKg, $decompositionTime);
+                    } elseif ($type == 'plastic') {
+                        $recyclabilityGrade = getInput("Grade daur ulang: ");
+                        $success = PlasticWaste::updateItem($id, $type, $weight, $pricePerKg, $recyclabilityGrade);
+                    } elseif ($type == 'metal') {
+                        $metalType = getInput("Tipe logam: ");
+                        $success = MetalWaste::updateItem($id, $type, $weight, $pricePerKg, $metalType);
+                    } else {
+                        echo "Tipe tidak valid.\n";
+                        break;
+                    }
+                    if ($success) {
+                        echo "Item sampah berhasil diubah.\n";
+                    } else {
+                        echo "Gagal mengubah item sampah.\n";
+                    }
+                    break;
+                case 4:
+                    $id = getInput("ID: ");
+                    if (WasteItems::deleteItem($id)) {
+                        echo "Item sampah berhasil dihapus.\n";
+                    } else {
+                        echo "Gagal menghapus item sampah.\n";
+                    }
+                    break;
+                case 5:
+                    return;
+                default:
+                    echo "Opsi tidak valid. Silakan coba lagi.\n";
+                    break;
             }
         }
-
-        return $pendingRequests;
     }
-
 }
 
 class Collector extends User {
+    public function __construct($email, $password) {
+        parent::login($email, $password);
+    }
     public function addRequest($id, $userId, $pickUpDate, $status) {
         $request = new CollectionRequest($id, $userId, $pickUpDate, $status);
         $request->addRequest();
@@ -258,10 +380,39 @@ class Collector extends User {
     public function viewRequests() {
         $request = new CollectionRequest(null, $this->id, null, null);
         return $request->getRequest($this->id);
+    }
+
+    public function addWasteItemToRequest($requestId, $itemId) {
+        $request = new CollectionRequest($requestId, $this->id, null, null);
+        $request->getRequest($requestId);
+        $item = WasteItems::getItem($itemId);
+        if ($item) {
+            $request->addWasteItem($item);
+            $request->updateRequest($request->status);
+            echo "Item sampah berhasil ditambahkan ke permintaan.\n";
+        } else {
+            echo "Item sampah tidak ditemukan.\n";
+        }
+    }
+
+    public function completeRequest($requestId) {
+        $request = new CollectionRequest($requestId, $this->id, null, null);
+        $request->getRequest($requestId);
+        $totalAmount = 0;
+        foreach ($request->wasteItems as $item) {
+            $totalAmount += $item->calculatePrice();
+        }
+        $transaction = new Transactions(generateId(), $this->id, $totalAmount);
+        $transaction->save();
+        echo "Permintaan selesai. Total pembayaran: {$totalAmount}\n";
     }
 }
 
 class Recycler extends User {
+    public function __construct($email, $password) {
+        parent::login($email, $password);
+    }
+
     public function addRequest($id, $userId, $pickUpDate, $status) {
         $request = new CollectionRequest($id, $userId, $pickUpDate, $status);
         $request->addRequest();
@@ -270,6 +421,18 @@ class Recycler extends User {
     public function viewRequests() {
         $request = new CollectionRequest(null, $this->id, null, null);
         return $request->getRequest($this->id);
+    }
+
+    public function processRequest($requestId) {
+        $request = new CollectionRequest($requestId, $this->id, null, null);
+        $request->getRequest($requestId);
+        $totalAmount = 0;
+        foreach ($request->wasteItems as $item) {
+            $totalAmount += $item->calculatePrice();
+        }
+        $transaction = new Transactions(generateId(), $this->id, $totalAmount);
+        $transaction->save();
+        echo "Permintaan diproses. Total pembayaran: {$totalAmount}\n";
     }
 }
 
@@ -279,7 +442,7 @@ class WasteItems {
     public $type;
     public $weight;
     public $pricePerKg;
-
+    public $noteItem;
     public function __construct($id, $type, $weight, $pricePerKg) {
         $this->id = $id;
         $this->type = $type;
@@ -316,7 +479,7 @@ class WasteItems {
         return null;
     }
 
-    public static function updateItem($id, $type, $weight, $pricePerKg): bool {
+    public static function updateItem($id, $type, $weight, $pricePerKg, $noteItem): bool {
         $filePath = 'waste_items.json';
         if (file_exists($filePath)) {
             $items = json_decode(file_get_contents($filePath), true);
@@ -325,7 +488,8 @@ class WasteItems {
                     'id' => $id,
                     'type' => $type,
                     'weight' => $weight,
-                    'pricePerKg' => $pricePerKg
+                    'pricePerKg' => $pricePerKg,
+                    'condition'=> $noteItem
                 ];
                 return file_put_contents($filePath, json_encode($items)) !== false;
             }
@@ -349,7 +513,7 @@ class WasteItems {
 class OrganicWaste extends WasteItems {
     public $decompositionTime;
 
-    public function __construct($id, $weight, $pricePerKg, $decompositionTime) {
+    public function __construct($id, $type, $weight, $pricePerKg, $decompositionTime) {
         parent::__construct($id, 'organic', $weight, $pricePerKg);
         $this->decompositionTime = $decompositionTime;
     }
@@ -363,7 +527,7 @@ class OrganicWaste extends WasteItems {
 class PlasticWaste extends WasteItems {
     public $recyclabilityGrade;
 
-    public function __construct($id, $weight, $pricePerKg, $recyclabilityGrade) {
+    public function __construct($id, $type, $weight, $pricePerKg, $recyclabilityGrade) {
         parent::__construct($id, 'plastic', $weight, $pricePerKg);
         $this->recyclabilityGrade = $recyclabilityGrade;
     }
@@ -383,7 +547,7 @@ class PlasticWaste extends WasteItems {
 class MetalWaste extends WasteItems {
     public $metalType;
 
-    public function __construct($id, $weight, $pricePerKg, $metalType) {
+    public function __construct($id, $type, $weight, $pricePerKg, $metalType) {
         parent::__construct($id, 'metal', $weight, $pricePerKg);
         $this->metalType = $metalType;
     }
@@ -638,10 +802,10 @@ function pageEnterBehavior($user){
     } else {
         if ($user->role == 'admin'){
             pageAdmin($user);
-        } elseif ($user->role == 'collector, ${user->nama}'){
-            echo "Selamat datang Collector, {$user->nama}\n";
+        } elseif ($user->role == 'collector'){
+            pageCollector($user);
         } elseif ($user->role == 'recycler'){
-            echo "Selamat datang Recycler, {$user->nama}\n";
+            pageRecycler($user);
         }
     }
 }
@@ -721,32 +885,50 @@ function mainMenu() {
 
 function pageAdmin($user) {
     $admin = new Admin($user->email, $user->password);
-    echo "Selamat datang Admin, {$user->name}\n";
+    echo "Selamat datang Admin, {$user->nama}\n";
     echo "=====================\n";
     while (true) {
         echo "1. Lihat semua pengguna\n";
-        echo "";
+        echo "2. Menghapus pengguna\n";
+        echo "3. Lihat semua permintaan\n";
+        echo "4. Ubah status permintaan\n";
+        echo "5. Hasilkan laporan bulanan pengguna\n";
+        echo "6. Tampilkan laporan bulanan\n";
+        echo "7. Kelola item sampah\n";
+        echo "8. Keluar\n";
         echo "Pilih opsi: ";
         $option = trim(fgets(STDIN));
         
         switch ($option) {
             case 1:
-                $users = $admin->viewAllUsers();
-                if (count($users) > 0) {
-                    echo "Daftar Pengguna\n";
-                    echo "===============\n";
-                    foreach ($users as $user) {
-                        echo "ID: {$user['id']}\n";
-                        echo "Nama: {$user['nama']}\n";
-                        echo "Email: {$user['email']}\n";
-                        echo "Role: {$user['role']}\n";
-                        echo "=====================\n";
-                    }
-                } else {
-                    echo "Belum ada pengguna.\n";
-                }
+                echo $admin->viewAllUsers();
                 break;
             case 2:
+                $id = getInput("Masukkan ID pengguna: ");
+                $admin->deleteUser($id);
+                break;
+            case 3:
+                echo $admin->viewAllRequests();
+                break;
+            case 4:
+                $id = getInput("Masukkan ID permintaan: ");
+                $status = getInput("Masukkan status baru: ");
+                $admin->manageRequest($id, $status);
+                break;
+            case 5:
+                $id = getInput("Masukkan ID pengguna: ");
+                $month = getInput("Masukkan bulan: ");
+                $admin->generateMonthlyReport($id, $month);
+                break;
+            case 6:
+                $id = getInput("Masukkan ID laporan: ");
+                $report = new Report($id, null, null);
+                print_r($report->viewReport());
+                break;
+            case 7:
+                $admin->manageWasteItems();
+                break;
+            case 8:
                 exit("Terima kasih!\n");
             default:
                 echo "Opsi tidak valid. Silakan coba lagi.\n";
@@ -755,8 +937,85 @@ function pageAdmin($user) {
     }
 }
 
+function pageCollector($user) {
+    $collector = new Collector($user->email, $user->password);
+    echo "Selamat datang Collector, {$user->nama}\n";
+    echo "=====================\n";
+    while (true) {
+        echo "1. Tambah permintaan\n";
+        echo "2. Lihat permintaan\n";
+        echo "3. Tambah item sampah ke permintaan\n";
+        echo "4. Selesaikan permintaan\n";
+        echo "5. Keluar\n";
+        echo "Pilih opsi: ";
+        $option = trim(fgets(STDIN));
+        
+        switch ($option) {
+            case 1:
+                $id = getInput("ID: ");
+                $userId = getInput("User ID: ");
+                $pickUpDate = getInput("Tanggal Pengumpulan: ");
+                $status = getInput("Status: ");
+                $collector->addRequest($id, $userId, $pickUpDate, $status);
+                break;
+            case 2:
+                print_r($collector->viewRequests());
+                break;
+            case 3:
+                $requestId = getInput("ID Permintaan: ");
+                $itemId = getInput("ID Item Sampah: ");
+                $collector->addWasteItemToRequest($requestId, $itemId);
+                break;
+            case 4:
+                $requestId = getInput("ID Permintaan: ");
+                $collector->completeRequest($requestId);
+                break;
+            case 5:
+                exit("Terima kasih!\n");
+            default:
+                echo "Opsi tidak valid. Silakan coba lagi.\n";
+                break;
+        }
+    }
+}
+
+function pageRecycler($user) {
+    $recycler = new Recycler($user->email, $user->password);
+    echo "Selamat datang Recycler, {$user->nama}\n";
+    echo "=====================\n";
+    while (true) {
+        echo "1. Tambah permintaan\n";
+        echo "2. Lihat permintaan\n";
+        echo "3. Proses permintaan\n";
+        echo "4. Keluar\n";
+        echo "Pilih opsi: ";
+        $option = trim(fgets(STDIN));
+        
+        switch ($option) {
+            case 1:
+                $id = getInput("ID: ");
+                $userId = getInput("User ID: ");
+                $pickUpDate = getInput("Tanggal Pengumpulan: ");
+                $status = getInput("Status: ");
+                $recycler->addRequest($id, $userId, $pickUpDate, $status);
+                break;
+            case 2:
+                print_r($recycler->viewRequests());
+                break;
+            case 3:
+                $requestId = getInput("ID Permintaan: ");
+                $recycler->processRequest($requestId);
+                break;
+            case 4:
+                exit("Terima kasih!\n");
+            default:
+                echo "Opsi tidak valid. Silakan coba lagi.\n";
+                break;
+        }
+    }
+}
 
 session_start();
 mainMenu();
-
+session_unset()
 ?>

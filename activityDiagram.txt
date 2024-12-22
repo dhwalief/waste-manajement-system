@@ -9,37 +9,32 @@ start
 if (is Admin?) then (yes)
   :manageUser();
   :manageRequests();
+  :generateMonthlyReport();
+  :manageWasteItems();
 else
   |Collector|
   if (is Collector?) then (yes)
     :addCollectionRequest();
     :selectWasteItems();
     :confirmRequest();
+    :addWasteItemToRequest();
+    :completeRequest();
   else
     |Recycler|
     if (is Recycler?) then (yes)
       :addRecyclingRequest();
       :processRecycling();
+      :completeRecycling();
+      :generateTransaction();
+      :processRequest();
     endif
   endif
 endif
-
-|Admin|
-:generateMonthlyReport();
-
-|Collector|
-:completeRequest();
-
-|Recycler|
-:completeRecycling();
-:generateTransaction();
 
 |User|
 :generateReceipt();
 :sendNotification();
 :viewReport();
-
-|User|
 :logout();
 stop
 @enduml

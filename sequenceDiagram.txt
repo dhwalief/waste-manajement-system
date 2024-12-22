@@ -36,4 +36,28 @@ JsonFile -> AdminClass : returnReportData()
 User -> JsonFile : sendNotification()
 JsonFile -> User : confirmNotification()
 
+User -> UserClass : updateUser()
+UserClass -> JsonFile : updateUserData()
+JsonFile -> UserClass : confirmUpdate()
+
+User -> UserClass : deleteUser()
+UserClass -> JsonFile : deleteUserData()
+JsonFile -> UserClass : confirmDelete()
+
+User -> UserClass : addCollectionRequest()
+UserClass -> JsonFile : addCollectionRequestData()
+JsonFile -> UserClass : confirmAddRequest()
+
+User -> UserClass : addTransaction()
+UserClass -> JsonFile : addTransactionData()
+JsonFile -> UserClass : confirmAddTransaction()
+
+User -> UserClass : setReport()
+UserClass -> JsonFile : setReportData()
+JsonFile -> UserClass : confirmSetReport()
+
+User -> UserClass : addNotification()
+UserClass -> JsonFile : addNotificationData()
+JsonFile -> UserClass : confirmAddNotification()
+
 @enduml

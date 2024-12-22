@@ -8,31 +8,50 @@ class User {
     + register() : void
     + login() : boolean
     + logout()
-    + updateProfil() : void
+    + updateUser() : void
     + deleteUser() : void
+    + addCollectionRequest() : void
+    + addTransaction() : void
+    + setReport() : void
+    + addNotification() : void
+    + getCollectionRequests() : array
+    + getTransactions() : array
+    + getReport() : Report
+    + getNotifications() : array
 }
 
 class Admin {
-    + manageUser() : void
-    + viewAllUser() : void
+    + viewAllUsers() : string
+    + deleteUser() : void
+    + manageRequest() : void
+    + viewAllRequests() : string
+    + generateMonthlyReport() : void
+    + manageWasteItems() : void
 }
 
 class Collector {
     + addRequest() : void
-    + viewRequest() : void
+    + viewRequests() : array
+    + addWasteItemToRequest() : void
+    + completeRequest() : void
 }
 
 class Recycler {
     + addRequest() : void
-    + viewRequest() : void
+    + viewRequests() : array
+    + processRequest() : void
 }
 
 class WasteItems {
     - id : int
-    - type[] : string
+    - type : string
     - weight : float
     - pricePerKg : float
     + calculatePrice() : float
+    + save() : bool
+    + static getItem(id) : WasteItems
+    + static updateItem(id, type, weight, pricePerKg) : bool
+    + static deleteItem(id) : bool
 }
 
 class OrganicWaste {
@@ -55,8 +74,12 @@ class CollectionRequest {
     - userId : int
     - pickUpDate : datetime
     - status : string (enum: Pending, InProgress, Complete)
-    + addRequest() : void
-    + updateRequest() : void
+    - wasteItems : array
+    + addRequest() : bool
+    + updateRequest(status) : bool
+    + getRequest(id) : CollectionRequest
+    + deleteRequest(id) : bool
+    + addWasteItem(item : WasteItems) : void
 }
 
 class Transactions {
@@ -64,6 +87,7 @@ class Transactions {
     - userId : int
     - totalAmount : float
     - date : datetime
+    + save() : bool
     + generateReceipt() : string
     + viewHistory() : array
 }
@@ -74,7 +98,7 @@ class Report {
     - month : string
     - totalCollected : float
     + generateMonthlyReport() : void
-    + viewReport() : void
+    + viewReport() : array
 }
 
 class Notification {
@@ -83,6 +107,7 @@ class Notification {
     - message : string
     - createdAt : datetime
     + sendNotification() : void
+    + getUserNotifications(userId) : array
 }
 
 User <|-- Admin
