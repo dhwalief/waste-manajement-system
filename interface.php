@@ -2,5 +2,4 @@
 interface Notifiable {
     public function sendNotification();
 }
-
 ?>
