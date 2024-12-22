@@ -192,7 +192,7 @@ class User {
 class Admin extends User {
     // public function __construct($id = null, $nama = null, $email = null, $password = null) {
     //     parent::__construct($id, $nama, $email, $password, 'admin');
-    // }
+    // }    
 
     public function manageUser() {
         // Implementasi untuk mengelola pengguna
@@ -567,5 +567,118 @@ class Notification {
     }
 }
 
-session_start();
+//pengacakan id
+function generateId($length = 8) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $id = '';
+    for ($i = 0; $i < $length; $i++) {
+        $id .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $id;
+}
 
+function registerUser($nama, $email, $password, $role) {
+    $id = generateId();
+    $user = new User();
+    $user->register($id, $nama, $email, $password, $role);
+}
+
+function updateUser($user,$id, $nama, $email, $password, $role) {
+    $user->updateProfile($id, $nama, $email, $password, $role);
+}
+
+function loginUser($email, $password) {
+    $user = new User();
+    return $user->login($email, $password) ? $user : null;
+}
+
+function pageEnterBehavior($user){
+    if ($user == null){
+        echo 'Silahkan login terlebih dahulu';
+    } else {
+        if ($user->role == 'admin'){
+            echo 'Selamat datang Admin\n';
+        } elseif ($user->role == 'collector, ${user->nama}'){
+            echo 'Selamat datang Collector, {$user->nama}\n';
+        } elseif ($user->role == 'recycler'){
+            echo 'Selamat datang Recycler, ${user->nama}\n';
+        }
+    }
+    echo 'Sistem Manajemen Pengelolaan Sampah Daul Ulang\n';
+}
+
+
+function getInput($prompt) {
+    echo $prompt;
+    return trim(fgets(STDIN));
+}
+
+function validateRole($role) {
+    $validRoles = ['admin', 'collector', 'recycler'];
+    return in_array($role, $validRoles);
+}
+
+function mainMenu() {
+    while (true) {
+        echo "1. Register\n";
+        echo "2. Login\n";
+        echo "3. Update Profile\n";
+        echo "4. Delete User\n";
+        echo "5. Exit\n";
+        echo "Pilih opsi: ";
+        $option = trim(fgets(STDIN));
+        
+        switch ($option) {
+            case 1:
+                $nama = getInput("Nama: ");
+                $email = getInput("Email: ");
+                $password = getInput("Password: ");
+                do {
+                    $role = getInput("Role (admin/collector/recycler): ");
+                    if (!validateRole($role)) {
+                        echo "Role tidak valid. Silakan coba lagi.\n";
+                    }
+                } while (!validateRole($role));
+                registerUser($nama, $email, $password, $role);
+                break;
+            case 2:
+                $email = getInput("Email: ");
+                $password = getInput("Password: ");
+                $user = loginUser($email, $password);
+                if ($user == null) {
+                    echo "Login gagal. Email atau password salah.\n";
+                } else {
+                    pageEnterBehavior($user);
+                }
+                break;
+            case 3:
+                $id = getInput("ID: ");
+                $nama = getInput("Nama: ");
+                $email = getInput("Email: ");
+                $password = getInput("Password: ");
+                do {
+                    $role = getInput("Role (admin/collector/recycler): ");
+                    if (!validateRole($role)) {
+                        echo "Role tidak valid. Silakan coba lagi.\n";
+                    }
+                } while (!validateRole($role));
+                $user = new User();
+                updateUser($user, $id, $nama, $email, $password, $role);
+                break;
+            case 4:
+                // $id = getInput("ID: ");
+                // $user = new User();
+                // $user->deleteUser($id);
+                // break;
+            case 5:
+                exit("Terima kasih!\n");
+            default:
+                echo "Opsi tidak valid. Silakan coba lagi.\n";
+                break;
+        }
+    }
+}
+session_start();
+mainMenu();
+?>
