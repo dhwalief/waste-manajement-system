@@ -96,7 +96,7 @@ class User {
         return false;
     }
 
-    public function updateProfile($id, $nama, $email, $password, $role) {
+    public function updateUser($id, $nama, $email, $password, $role) {
         if (file_exists($this->filePath)) {
             $users = json_decode(file_get_contents($this->filePath), true);
             if (isset($users[$id])) {
@@ -190,12 +190,8 @@ class User {
 }
 
 class Admin extends User {
-    // public function __construct($id = null, $nama = null, $email = null, $password = null) {
-    //     parent::__construct($id, $nama, $email, $password, 'admin');
-    // }    
-
-    public function manageUser() {
-        // Implementasi untuk mengelola pengguna
+    public function __construct($email, $password) {
+        parent::login($email, $password);
     }
 
     public function viewAllUsers() {
@@ -204,6 +200,53 @@ class Admin extends User {
         }
         return [];
     }
+
+    public function deleteUser($id) {
+        if (file_exists($this->filePath)) {
+            $users = json_decode(file_get_contents($this->filePath), true);
+            if (isset($users[$id])) {
+                unset($users[$id]);
+                file_put_contents($this->filePath, json_encode($users));
+                echo "Pengguna berhasil dihapus.\n";
+            } else {
+                echo "Pengguna tidak ditemukan.\n";
+
+            }
+        }
+    }
+
+    public function manageRequest($requestId, $status) {
+        $request = new CollectionRequest($requestId, null, null, null);
+        if ($request->updateRequest($status)) {
+            echo "Request berhasil diperbarui.\n";
+        } else {
+            echo "Gagal memperbarui request.\n";
+        }
+    }
+
+    public function generateMonthlyReport($userId, $month) {
+        $reportId = generateId();
+        $report = new Report($reportId, $userId, $month);
+        $report->generateMonthlyReport();
+        echo "Laporan bulanan berhasil dibuat.\n";
+    }
+
+    public function viewPendingRequests() {
+        $requests = [];
+        if (file_exists('collection_requests.json')) {
+            $requests = json_decode(file_get_contents('collection_requests.json'), true);
+        }
+
+        $pendingRequests = [];
+        foreach ($requests as $request) {
+            if ($request['status'] !== 'reported') {
+                $pendingRequests[] = $request;
+            }
+        }
+
+        return $pendingRequests;
+    }
+
 }
 
 class Collector extends User {
@@ -584,10 +627,6 @@ function registerUser($nama, $email, $password, $role) {
     $user->register($id, $nama, $email, $password, $role);
 }
 
-function updateUser($user,$id, $nama, $email, $password, $role) {
-    $user->updateProfile($id, $nama, $email, $password, $role);
-}
-
 function loginUser($email, $password) {
     $user = new User();
     return $user->login($email, $password) ? $user : null;
@@ -595,19 +634,17 @@ function loginUser($email, $password) {
 
 function pageEnterBehavior($user){
     if ($user == null){
-        echo 'Silahkan login terlebih dahulu';
+        echo "Silahkan login terlebih dahulu\n";
     } else {
         if ($user->role == 'admin'){
-            echo 'Selamat datang Admin\n';
+            pageAdmin($user);
         } elseif ($user->role == 'collector, ${user->nama}'){
-            echo 'Selamat datang Collector, {$user->nama}\n';
+            echo "Selamat datang Collector, {$user->nama}\n";
         } elseif ($user->role == 'recycler'){
-            echo 'Selamat datang Recycler, ${user->nama}\n';
+            echo "Selamat datang Recycler, {$user->nama}\n";
         }
     }
-    echo 'Sistem Manajemen Pengelolaan Sampah Daul Ulang\n';
 }
-
 
 function getInput($prompt) {
     echo $prompt;
@@ -620,11 +657,13 @@ function validateRole($role) {
 }
 
 function mainMenu() {
+    echo "Sistem Manajemen Pengelolaan Sampah Daur Ulang\n";
+    echo "==============================================\n";
     while (true) {
         echo "1. Register\n";
         echo "2. Login\n";
         echo "3. Update Profile\n";
-        echo "4. Delete User\n";
+        // echo "4. Delete User\n";
         echo "5. Exit\n";
         echo "Pilih opsi: ";
         $option = trim(fgets(STDIN));
@@ -664,7 +703,7 @@ function mainMenu() {
                     }
                 } while (!validateRole($role));
                 $user = new User();
-                updateUser($user, $id, $nama, $email, $password, $role);
+                $user->updateUser($id, $nama, $email, $password, $role);
                 break;
             case 4:
                 // $id = getInput("ID: ");
@@ -679,6 +718,45 @@ function mainMenu() {
         }
     }
 }
+
+function pageAdmin($user) {
+    $admin = new Admin($user->email, $user->password);
+    echo "Selamat datang Admin, {$user->name}\n";
+    echo "=====================\n";
+    while (true) {
+        echo "1. Lihat semua pengguna\n";
+        echo "";
+        echo "Pilih opsi: ";
+        $option = trim(fgets(STDIN));
+        
+        switch ($option) {
+            case 1:
+                $users = $admin->viewAllUsers();
+                if (count($users) > 0) {
+                    echo "Daftar Pengguna\n";
+                    echo "===============\n";
+                    foreach ($users as $user) {
+                        echo "ID: {$user['id']}\n";
+                        echo "Nama: {$user['nama']}\n";
+                        echo "Email: {$user['email']}\n";
+                        echo "Role: {$user['role']}\n";
+                        echo "=====================\n";
+                    }
+                } else {
+                    echo "Belum ada pengguna.\n";
+                }
+                break;
+            case 2:
+                exit("Terima kasih!\n");
+            default:
+                echo "Opsi tidak valid. Silakan coba lagi.\n";
+                break;
+        }
+    }
+}
+
+
 session_start();
 mainMenu();
+
 ?>
