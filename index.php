@@ -605,7 +605,7 @@ function pageEnterBehavior($user){
             echo 'Selamat datang Recycler, ${user->nama}\n';
         }
     }
-    echo 'Sistem Manajemen Pengelolaan Sampah Daul Ulang\n';
+    echo 'Sistem Manajemen Pengelolaan Sampah Daur Ulang\n';
 }
 
 
