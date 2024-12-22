@@ -1,5 +1,9 @@
 <?php
-class User {
+
+include_once 'abstract.php';
+include_once 'interface.php';
+
+class User extends UserActions {
     public $id;
     public $nama;
     public $email;
@@ -436,7 +440,7 @@ class Recycler extends User {
     }
 }
 
-class WasteItems {
+class WasteItems extends DataHandler {
     private $filePath = 'waste_items.json';
     public $id;
     public $type;
@@ -729,7 +733,7 @@ class Report {
     }
 }
 
-class Notification {
+class Notification implements Notifiable {
     private $filePath = 'notifications.json';
     public $id;
     public $userId;
@@ -774,7 +778,7 @@ class Notification {
     }
 }
 
-//pengacakan id
+
 function generateId($length = 8) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
@@ -826,9 +830,7 @@ function mainMenu() {
     while (true) {
         echo "1. Register\n";
         echo "2. Login\n";
-        echo "3. Update Profile\n";
-        // echo "4. Delete User\n";
-        echo "5. Exit\n";
+        echo "3. Exit\n";
         echo "Pilih opsi: ";
         $option = trim(fgets(STDIN));
         
@@ -855,26 +857,7 @@ function mainMenu() {
                     pageEnterBehavior($user);
                 }
                 break;
-            case 3:
-                $id = getInput("ID: ");
-                $nama = getInput("Nama: ");
-                $email = getInput("Email: ");
-                $password = getInput("Password: ");
-                do {
-                    $role = getInput("Role (admin/collector/recycler): ");
-                    if (!validateRole($role)) {
-                        echo "Role tidak valid. Silakan coba lagi.\n";
-                    }
-                } while (!validateRole($role));
-                $user = new User();
-                $user->updateUser($id, $nama, $email, $password, $role);
-                break;
             case 4:
-                // $id = getInput("ID: ");
-                // $user = new User();
-                // $user->deleteUser($id);
-                // break;
-            case 5:
                 exit("Terima kasih!\n");
             default:
                 echo "Opsi tidak valid. Silakan coba lagi.\n";
